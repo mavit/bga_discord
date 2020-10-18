@@ -50,7 +50,11 @@ async def on_message(message):
         return
     if message.content.startswith('!play'):
         message.content.replace('!play', '!bga make')
-    if message.content.startswith('!bga') or message.content.startswith('!tfm'):
+    if (
+        message.content.startswith('!bga')
+        or message.content.startswith('!tfm')
+        or message.channel.type == discord.ChannelType.private
+    ):
         logger.debug(f"Received message {message.content}")
         # Replace the quotes on a German keyboard with regular ones.
         message.content.replace('„', '"').replace('“', '"')
@@ -58,10 +62,10 @@ async def on_message(message):
             await message.author.send(f"You entered \n`{message.content}`\nwhich has an odd number of \" or \' characters. Please fix this and retry.")
             return
         try:
-            if message.content.startswith('!bga'):
-                await init_bga_game(message)
             if message.content.startswith('!tfm'):
                 await init_tfm_game(message)
+            else:
+                await init_bga_game(message)
         except Exception as e:
             logger.error("Encountered error:" + str(e) + "\n" + str(traceback.format_exc()))
             await message.channel.send("Tell <@!234561564697559041> to fix his bga bot.")
