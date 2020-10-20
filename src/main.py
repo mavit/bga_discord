@@ -50,10 +50,18 @@ async def on_message(message):
         return
     if message.content.startswith('!play'):
         message.content.replace('!play', '!bga make')
+    else:
+        if message.guild is not None:
+            for role in message.guild.me.roles:
+                if role.managed and role.members == [client.user]:
+                    bot_role = role
+                    break
     if (
         message.content.startswith('!bga')
         or message.content.startswith('!tfm')
         or message.channel.type == discord.ChannelType.private
+        or client.user in message.mentions
+        or bot_role in message.role_mentions
     ):
         logger.debug(f"Received message {message.content}")
         # Replace the quotes on a German keyboard with regular ones.
