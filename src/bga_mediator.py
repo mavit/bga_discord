@@ -224,7 +224,7 @@ class BGAAccount:
         # Set defaults if they're not present
         defaults = {
             "mode": "normal",
-            "speed": "1/day",
+            "speed": "normal",
             "presentation": "🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥",
             "minrep": "0",
         }
