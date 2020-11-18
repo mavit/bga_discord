@@ -231,6 +231,11 @@ class BGAAccount:
         # options will overwrite defaults if they are there
         defaults.update(options)
         updated_options = defaults
+
+        if "open" not in updated_options \
+           and updated_options["restrictgroup"] == "Afternoon Play":
+            updated_options["open"] = "true"
+
         url_data = []
         for option in updated_options:
             value = updated_options[option]
