@@ -233,6 +233,7 @@ class BGAAccount:
         updated_options = defaults
 
         if "open" not in updated_options \
+           and "restrictgroup" in updated_options \
            and updated_options["restrictgroup"] == "Afternoon Play":
             updated_options["open"] = "true"
 
