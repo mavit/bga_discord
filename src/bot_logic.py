@@ -22,42 +22,44 @@ logging.getLogger('discord').setLevel(logging.WARN)
 
 async def init_bga_game(message):
     args = shlex.split(message.content)
-    if len(args) == 1:
+    if args[0] == "!bga":
+        args.pop(0)
+    if len(args) == 0:
         await message.channel.send("Sending BGA help your way.")
         await send_help(message, "bga_help")
         return
-    command = args[1]
+    command = args[0]
     if command == "list":
         retmsg = await bga_list_games()
         message.channel.send(retmsg)
     elif command == "setup":
-        if len(args) != 4:
+        if len(args) != 3:
             await message.channel.send("Setup requires a BGA username and "
                                        "password. Run `!bga` to see setup examples.")
             return
-        bga_user = args[2]
-        bga_passwd = args[3]
+        bga_user = args[1]
+        bga_passwd = args[2]
         await setup_bga_account(message, bga_user, bga_passwd)
     elif command == "link":
         # expected syntax is `!bga link $discord_tag $bga_username`
-        if len(args) != 4:
+        if len(args) != 3:
             await message.channel.send("link got the wrong number of arguments. Run `!bga` to see link examples.")
-        discord_tag = args[2]
+        discord_tag = args[1]
         id_matches = re.match(r"<@!?(\d+)>", discord_tag)
         if not id_matches:
             await message.channel.send("Unable to link. Syntax is `!bga link @discord_tag 'bga username'`. "
                                       "Make sure that the discord tag has an @ and is purple.")
             return
         discord_id = id_matches[1]
-        bga_user = args[3]
+        bga_user = args[2]
         await link_accounts(message, discord_id, bga_user)
     elif command == "make":
         options = []
-        if len(args) < 3:
+        if len(args) < 2:
             await message.channel.send("make requires a BGA game. Run `!bga` to see make examples.")
             return
-        game = args[2]
-        players = args[3:]
+        game = args[1]
+        players = args[2:]
         for arg in args:
             if ":" in arg:
                 key, value = arg.split(":")[:2]
@@ -67,7 +69,7 @@ async def init_bga_game(message):
         discord_id = message.author.id
         await setup_bga_game(message, discord_id, game, players, options)
     elif command == "tables": # Get all tables that have players in common
-        if len(args) == 2:
+        if len(args) == 1:
             # Assume that you want to know your own tables if command is "!bga tables"
             user_data = get_all_logins()
             if str(message.author.id) in user_data:
@@ -80,10 +82,10 @@ async def init_bga_game(message):
                 await message.channel.send(help_msg)
                 return
         else:
-            players = args[2:]
+            players = args[1:]
         await get_tables_by_players(players, message)
     elif command == "friend":
-        await add_friends(args[2:], message)
+        await add_friends(args[1:], message)
     elif command == "options":
         await send_help(message, "bga_options")
     else:
