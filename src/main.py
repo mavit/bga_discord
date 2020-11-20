@@ -51,18 +51,28 @@ async def on_message(message):
     if message.content.startswith('!play'):
         message.content = message.content.replace('!play', '!bga make', 1)
     else:
+        bot_role = None
         if message.guild is not None:
             for role in message.guild.me.roles:
                 if role.managed and role.members == [client.user]:
                     bot_role = role
                     break
-    if (
-        message.content.startswith('!bga')
-        or message.content.startswith('!tfm')
-        or message.channel.type == discord.ChannelType.private
-        or client.user in message.mentions
-        or bot_role in message.role_mentions
-    ):
+
+        if not message.content.startswith('!bga') \
+           and not message.content.startswith('!tfm'):
+            if client.user.mentioned_in(message):
+                message.content = re.sub(f'<@!?{client.user.id}>\\s*', '',
+                                         message.content)
+            elif bot_role in message.role_mentions:
+                message.content = re.sub(f'<@&{bot_role.id}>\\s*', '',
+                                         message.content)
+
+    if message.content.startswith('!bga') \
+       or message.content.startswith('!tfm') \
+       or message.channel.type == discord.ChannelType.private \
+       or client.user.mentioned_in(message) \
+       or bot_role in message.role_mentions:
+
         logger.debug(f"Received message {message.content}")
         # Replace the quotes on a German keyboard with regular ones.
         message.content.replace('„', '"').replace('“', '"')
