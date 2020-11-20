@@ -49,7 +49,7 @@ async def on_message(message):
     if message.author == client.user:
         return
     if message.content.startswith('!play'):
-        message.content.replace('!play', '!bga make')
+        message.content = message.content.replace('!play', '!bga make', 1)
     else:
         if message.guild is not None:
             for role in message.guild.me.roles:
