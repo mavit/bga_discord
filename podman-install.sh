@@ -31,12 +31,13 @@ chmod --recursive g-w,o-rwx $srv/var
 (
     cd /
     sudo --user=$owner \
-         podman run \
+         podman create \
                 --replace \
                 --name=$container \
                 --mount=type=bind,src=$srv/var,dst=$srv/var,relabel=private \
                 --detach \
-                bga_discord
+                --label=io.containers.autoupdate=image \
+                ghcr.io/mavit/bga_discord/bga_discord:latest
     sudo --user=$owner \
          podman generate systemd --name $container \
          > /etc/systemd/system/container-$container.service
@@ -51,4 +52,4 @@ chmod --recursive g-w,o-rwx $srv/var
 )
 
 systemctl daemon-reload
-systemctl enable container-$container.service
+systemctl enable --now container-$container.service
