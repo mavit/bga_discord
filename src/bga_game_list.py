@@ -123,6 +123,12 @@ async def get_title_by_game(normalized_name):
             return title
 
 
+async def get_title_by_name_part(name_part):
+    games = await get_games_by_name_part(name_part)
+    if len(games) == 1:
+        return await get_title_by_game(games[0])
+
+
 async def get_games_by_name_part(name_part):
     simplified_name_part = simplify_name(name_part)
     simplified_games = await get_simplified_game_list()
