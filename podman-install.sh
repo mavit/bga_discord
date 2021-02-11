@@ -41,14 +41,7 @@ chmod --recursive g-w,o-rwx $srv/var
     sudo --user=$owner \
          podman generate systemd --name $container \
          > /etc/systemd/system/container-$container.service
-    ansible --module-name=ini_file \
-            --args="path=/etc/systemd/system/container-$container.service
-                    section=Service
-                    option=User
-                    value=$owner
-                    no_extra_spaces=true" \
-            localhost \
-            > /dev/null
+    perl -MConfig::IniFiles -E 'tie my %service, q(Config::IniFiles), -file => shift; $service{Service}{User} = shift; tied(%service)->RewriteConfig();' /etc/systemd/system/container-$container.service $owner
 )
 
 systemctl daemon-reload
