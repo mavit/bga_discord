@@ -4,6 +4,9 @@ from logging.handlers import RotatingFileHandler
 
 import discord
 
+from bga_game_list import get_title_by_name_part
+
+
 LOG_FILENAME = "errs"
 logger = logging.getLogger(__name__)
 handler = RotatingFileHandler(LOG_FILENAME, maxBytes=10000000, backupCount=0)
@@ -19,7 +22,7 @@ async def send_table_embed(message, game, desc, author, players, second_title, s
         f"Sending embed with message: {message}, game {game}, url {desc}, author {author}, players {players}, 2nd title {second_title}, 2nd content {second_content}",
     )
     retmsg = discord.Embed(
-        title=game,
+        title=await get_title_by_name_part(game),
         description=desc,
         color=3447003,
     )

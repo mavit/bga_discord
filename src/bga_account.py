@@ -7,7 +7,9 @@ import time
 import urllib.parse
 
 import aiohttp
-from bga_game_list import get_game_list
+from bga_game_list import get_games_by_name_part, get_id_by_game, get_title_by_game
+from utils import simplify_name
+
 
 logging.getLogger("aiohttp").setLevel(logging.WARN)
 
@@ -71,7 +73,6 @@ class BGAAccount:
 
     async def post(self, url, params):
         """Generic post."""
-        logger.debug("LOGIN: " + url + "\nEMAIL: " + params["email"])
         async with self.session.post(url, data=params) as response:
             resp_text = await response.text()
             print(f"Posted {url}. Resp: " + resp_text[:80])
@@ -88,6 +89,7 @@ class BGAAccount:
             "form_id": "loginform",
             "dojo.preventCache": str(int(time.time())),
         }
+        logger.debug("LOGIN: " + url + "\nEMAIL: " + params["email"])
         await self.post(url, params)
         return await self.verify_privileged()
 
@@ -128,37 +130,27 @@ class BGAAccount:
         """Create a table and return its url. 201,0 is to set to normal mode.
         Partial game names are ok, like race for raceforthegalaxy.
         Returns (table id (int), error string (str))"""
+
         # Try to close any logged-in session gracefully
-        lower_game_name = re.sub(r"[^a-z0-9]", "", game_name_part.lower())
         await self.quit_table()
         await self.quit_playing_with_friends()
-        games, err_msg = await get_game_list()
-        if len(err_msg) > 0:
-            return -1, err_msg
-        lower_games = {}
-        for game in games:
-            lower_name = re.sub(r"[^a-z0-9]", "", game.lower())
-            lower_games[lower_name] = games[game]
+
         # If name is unique like "race" for "raceforthegalaxy", use that
-        games_found = []
-        game_name = ""
-        for game_i in list(lower_games.keys()):
-            if game_i == lower_game_name:  # if there's an exact match, take it!
-                game_name = lower_game_name
-            elif game_i.startswith(lower_game_name):
-                games_found.append(game_i)
-        if len(game_name) == 0:
-            if len(games_found) == 0:
-                err = (
-                    f"`{lower_game_name}` is not available on BGA. Check your spelling "
-                    f"(capitalization and special characters do not matter)."
-                )
-                return -1, err
-            elif len(games_found) > 1:
-                err = f"`{lower_game_name}` matches [{','.join(games_found)}]. Use more letters to match."
-                return -1, err
-            game_name = games_found[0]
-        game_id = lower_games[game_name]
+        games_found = await get_games_by_name_part(game_name_part)
+        if len(games_found) == 0:
+            err = (
+                f"`{simplify_name(game_name_part)}` is not available on BGA. Check your spelling "
+                f"(capitalization and special characters do not matter)."
+            )
+            return -1, err
+        elif len(games_found) > 1:
+            games_found_md = "\n"
+            for game in games_found:
+                games_found_md += f"• `{simplify_name(await get_title_by_game(game))}`" + "\n"
+            err = f"`{simplify_name(game_name_part)}` matches:{games_found_md}Use more letters to match."
+            return -1, err
+        game_id = await get_id_by_game(games_found[0])
+
         url = self.base_url + "/table/table/createnew.html"
         params = {
             "game": game_id,
@@ -403,6 +395,17 @@ class BGAAccount:
         params = {"table": table_id, "dojo.preventCache": str(int(time.time()))}
         url += "?" + urllib.parse.urlencode(params)
         await self.fetch(url)
+
+    async def message_player(self, player_name, msg_to_send):
+        url = self.base_url + "/table/table/say_private.html"
+        player_id = await self.get_player_id(player_name)
+        if player_id == -1:
+            return f"Player {player_name} not found, so message not sent."
+        params = {"to": player_id, "msg": msg_to_send, "dojo.preventCache": str(int(time.time()))}
+        url += "?" + urllib.parse.urlencode(params)
+        logger.debug(f"Sending message to {player_name} with length {len(msg_to_send)}")
+        await self.post(url, params)
+        return "Message sent"
 
     async def close_connection(self):
         """Close the connection. aiohttp complains otherwise."""
