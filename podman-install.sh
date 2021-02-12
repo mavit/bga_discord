@@ -33,6 +33,7 @@ chmod --recursive g-w,o-rwx $srv/var
     sudo --user=$owner \
          podman create \
                 --replace \
+                --pull=always \
                 --name=$container \
                 --mount=type=bind,src=$srv/var,dst=$srv/var,relabel=private \
                 --detach \
