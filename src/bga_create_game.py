@@ -65,8 +65,9 @@ async def create_bga_game(message, bga_account, game, players, p1_id, options):
     valid_bga_players = []
     invited_players = []
 
-    if message.guild and message.guild.name == 'Afternoon Play':
-        options.insert(0, ('restrictgroup', 'Afternoon Play'))
+    if message.guild and message.guild.name == 'Afternoon Play' \
+       and 'restrictgroup' not in options:
+        options['restrictgroup'] = 'Afternoon Play'
 
     err_msg = await bga_account.set_table_options(options, table_id)
     if err_msg:
