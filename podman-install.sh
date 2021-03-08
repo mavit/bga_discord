@@ -12,8 +12,8 @@ owner=$container
 srv=/srv/$container
 
 id -u $owner >/dev/null 2>&1 \
-    || useradd --create-home --shell=/sbin/nologin $owner
-subuid=$(($(grep "^$owner" /etc/subuid | cut -d: -f2) - 1 + 1000))
+    || useradd --shell=/sbin/nologin $owner
+subuid=$(($(grep "^$owner" /etc/subuid | cut -d: -f2) + 1000))
 
 
 install --directory --owner=$subuid $srv/var
@@ -28,22 +28,19 @@ fi
 chown --recursive $subuid:$owner $srv/var
 chmod --recursive g-w,o-rwx $srv/var
 
-(
-    cd /
-    sudo --user=$owner \
-         podman create \
-                --replace \
-                --pull=always \
-                --name=$container \
-                --mount=type=bind,src=$srv/var,dst=$srv/var,relabel=private \
-                --detach \
-                --label=io.containers.autoupdate=image \
-                ghcr.io/mavit/bga_discord/bga_discord:latest
-    sudo --user=$owner \
-         podman generate systemd --name $container \
-         > /etc/systemd/system/container-$container.service
-    perl -MConfig::IniFiles -E 'tie my %service, q(Config::IniFiles), -file => shift; $service{Service}{User} = shift; tied(%service)->RewriteConfig();' /etc/systemd/system/container-$container.service $owner
-)
+podman create \
+       --replace \
+       --pull=always \
+       --name=$container \
+       --user=$owner \
+       --subuidname=$owner \
+       --subgidname=$owner \
+       --mount=type=bind,src=$srv/var,dst=$srv/var,relabel=private \
+       --detach \
+       --label=io.containers.autoupdate=image \
+       ghcr.io/mavit/bga_discord/bga_discord:latest
 
+podman generate systemd --name --new $container \
+       > /etc/systemd/system/container-$container.service
 systemctl daemon-reload
 systemctl enable --now container-$container.service
