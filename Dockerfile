@@ -7,9 +7,12 @@ VOLUME /srv/bga_discord/var
 ENTRYPOINT ["python3", "-u", "src/main.py"]
 
 RUN \
-    yum update -y --setopt=install_weak_deps=False; \
-    yum install -y \
+    yum update -y --nodocs --setopt=install_weak_deps=0; \
+    yum install -y --nodocs --setopt=install_weak_deps=0 \
+        'gcc' \
+        'python3-devel' \
         'python3dist(pip)' \
+        'python3dist(wheel)' \
     ; \
     yum clean all; \
     rm -rf /var/cache/yum;
