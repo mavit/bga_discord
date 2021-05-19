@@ -9,7 +9,10 @@ ENTRYPOINT ["python3", "-u", "src/main.py"]
 RUN \
     yum update -y --setopt=install_weak_deps=False; \
     yum install -y \
+        'gcc' \
+        'python3-devel' \
         'python3dist(pip)' \
+        'python3dist(wheel)' \
     ; \
     yum clean all; \
     rm -rf /var/cache/yum;
