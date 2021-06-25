@@ -36,7 +36,6 @@ podman create \
        --subuidname=$owner \
        --subgidname=$owner \
        --mount=type=bind,src=$srv/var,dst=$srv/var,relabel=private \
-       --detach \
        --label=io.containers.autoupdate=image \
        ghcr.io/mavit/bga_discord/bga_discord:latest
 
