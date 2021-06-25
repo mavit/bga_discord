@@ -13,6 +13,12 @@ on:
   # Run tests for any PRs.
   pull_request:
 
+  # Manually triggerable from the GitHub UI.
+  workflow_dispatch:
+
+  schedule:
+    - cron: 00 23 * * 5
+
 env:
   # TODO: Change variable to your image's name.
   IMAGE_NAME: bga_discord
@@ -42,7 +48,7 @@ jobs:
     needs: test
 
     runs-on: ubuntu-latest
-    if: github.event_name == 'push'
+    if: github.event_name != 'pull_request'
 
     steps:
       - uses: actions/checkout@v2
